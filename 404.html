@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fungki · Demo</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap">
+  <script>
+    // Static demo (bun run demo): no server, no sign-in. Every GET /api/<path>?period=P reads
+    // data/<path>/P.json (or data/<path>.json), saved from the seeded server at build time. Writes go nowhere.
+    const BASE = "/fungki_dashboard"
+    const realFetch = fetch
+    let warned = false
+    window.fetch = (input, init) => {
+      const req = new Request(input, init)
+      const url = new URL(req.url)
+      if (!url.pathname.startsWith("/api/")) return realFetch(input, init)
+      if (req.method !== "GET") {
+        if (!warned && !url.pathname.endsWith("/logout")) alert("This is a read-only demo, so changes aren't saved.")
+        warned = true
+        return Promise.resolve(new Response(null, { status: 404 }))
+      }
+      const period = url.searchParams.get("period")
+      return realFetch(`${BASE}/data${url.pathname.slice(4)}${period ? `/${period}` : ""}.json`)
+    }
+    // "/" is the sign-in page in the app; the demo opens on the dashboard, frozen at the day it was built.
+    const url = new URL(location.href)
+    if (url.pathname === BASE + "/" || url.pathname === BASE) url.pathname = BASE + "/dashboard"
+    if (!url.searchParams.has("period")) url.searchParams.set("period", "2026-10")
+    history.replaceState(null, "", url)
+  </script>
+  <script type="module" crossorigin src="/fungki_dashboard/assets/demo-BxL_gaJh.js"></script>
+  <link rel="stylesheet" crossorigin href="/fungki_dashboard/assets/demo-DXhA25IT.css">
+</head>
+<body>
+  <div id="root"></div>
+</body>
+</html>
